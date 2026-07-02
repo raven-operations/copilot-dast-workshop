@@ -1,0 +1,39 @@
+# --- OS ---
+.DS_Store
+Thumbs.db
+
+# --- Editores / IDEs ---
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# --- Logs / temporales ---
+logs/
+*.log
+tmp/
+*.tmp
+*.pid
+*.seed
+
+# --- Reportes generados (etapas posteriores del workshop) ---
+reports/
+!reports/.gitkeep
+
+# --- Node (por si se agrega tooling local) ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# --- Docker ---
+*.env
+.env.*
+!.env.example
+
+# --- ZAP (etapas posteriores) ---
+zap/wrk/
+zap/session/

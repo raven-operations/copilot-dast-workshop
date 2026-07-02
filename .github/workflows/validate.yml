@@ -1,0 +1,56 @@
+# Workflow de validacion basico del laboratorio.
+#
+# En esta etapa NO se ejecutan escaneos DAST ni analisis de seguridad.
+# Solo se valida que la estructura del repositorio y el docker-compose
+# esten correctos.
+
+name: validate-lab
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    name: Validate repository structure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify required files
+        shell: bash
+        run: |
+          set -euo pipefail
+          required=(
+            "README.md"
+            "LICENSE"
+            ".gitignore"
+            "docker-compose.yml"
+            "docs/Architecture.md"
+            "docs/Workshop.md"
+            "docs/LabGuide.md"
+            "scripts/start.sh"
+            "scripts/stop.sh"
+            "scripts/cleanup.sh"
+            "scripts/start.ps1"
+            "scripts/stop.ps1"
+            "scripts/cleanup.ps1"
+          )
+          missing=0
+          for f in "${required[@]}"; do
+            if [[ ! -f "$f" ]]; then
+              echo "::error file=$f::Missing required file: $f"
+              missing=1
+            fi
+          done
+          if [[ $missing -ne 0 ]]; then
+            exit 1
+          fi
+          echo "All required files are present."
+
+      - name: Validate docker-compose syntax
+        run: docker compose -f docker-compose.yml config --quiet
