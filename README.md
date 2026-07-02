@@ -18,28 +18,31 @@ demostrar cómo **GitHub Copilot** puede acelerar significativamente un flujo
 DevSecOps al escribir configuraciones, workflows, scripts y remediaciones
 relacionadas con seguridad dinámica de aplicaciones.
 
-En esta **primera etapa** trabajaremos únicamente con la aplicación vulnerable
-[OWASP Juice Shop](https://owasp.org/www-project-juice-shop/) ejecutándose
-localmente mediante Docker Compose. Las etapas posteriores del workshop
-integrarán OWASP ZAP y GitHub Actions.
+El laboratorio incluye **dos escenarios end-to-end**:
+
+- **Escenario A**: OWASP Juice Shop (código de terceros) remediado con un
+  reverse proxy Caddy que Copilot ayuda a construir.
+- **Escenario B**: `vulnerable-api` (código propio) con SQLi, XSS,
+  command injection y path traversal, remediados en el código fuente
+  con Copilot.
+
+Ambos escenarios corren en Docker Compose local y en GitHub Actions.
 
 ---
 
 ## Objetivos
 
-Al finalizar esta primera etapa el participante será capaz de:
+Al finalizar el laboratorio el participante será capaz de:
 
-- Clonar el repositorio del laboratorio.
-- Levantar una aplicación vulnerable con **Docker Compose**.
-- Acceder a la aplicación desde el navegador.
-- Entender la estructura del laboratorio para futuras integraciones
-  (OWASP ZAP + GitHub Actions).
-
-En etapas posteriores del workshop se incorporarán:
-
-- Escaneos DAST automáticos con OWASP ZAP.
-- Automatización mediante GitHub Actions.
-- Generación de reportes y remediación asistida por Copilot.
+- Levantar apps vulnerables con **Docker Compose** e integrar OWASP ZAP
+  para escaneos DAST (baseline y full).
+- Automatizar el escaneo en **GitHub Actions** con un workflow reutilizable
+  y wrappers por app.
+- Usar **GitHub Copilot Chat** para interpretar reportes ZAP y generar el
+  fix: cuando no tenés el código (proxy/headers) y cuando sí lo tenés
+  (refactor de rutas Express).
+- Comparar los hallazgos antes/después para medir el impacto real de las
+  remediaciones.
 
 ---
 
@@ -345,26 +348,39 @@ copilot-dast-workshop/
 ├── README.md              # Este archivo
 ├── LICENSE                # Licencia del laboratorio
 ├── .gitignore             # Reglas de exclusión de Git
-├── docker-compose.yml     # Definición de servicios (Juice Shop)
-├── app/                   # Espacio reservado para código de la app
-├── docs/                  # Documentación del workshop
-├── reports/               # Reportes generados (etapas posteriores)
-├── scripts/               # Scripts de arranque, parada y limpieza
-├── zap/                   # Configuración de OWASP ZAP (etapas posteriores)
-└── .github/
-    └── workflows/         # Workflows de GitHub Actions
+├── docker-compose.yml     # Servicios: juice-shop, vulnerable-api, proxy, zap
+├── app-vulnerable-api/    # API Node.js con 4 vulnerabilidades (Escenario B)
+├── proxy/                 # Caddyfile con security headers (Escenario A)
+├── zap/                   # Reglas ZAP (rules.tsv)
+├── scripts/               # scan.sh/ps1, start/stop/cleanup
+├── reports/               # Reportes generados por ZAP (gitignored)
+├── docs/                  # Guías del workshop y cheat sheets de prompts
+└── .github/workflows/     # validate + dast-juice-shop + dast-vulnerable-api
+                            #   + _dast-reusable (workflow_call)
 ```
 
 ---
 
 ## Próximos pasos
 
-En las siguientes etapas del workshop se agregará:
+El laboratorio está completo para el workshop. Extensiones opcionales para
+profundizar después del taller:
 
-- Integración con **OWASP ZAP** para escaneos DAST.
-- **GitHub Actions** para automatización del pipeline DevSecOps.
-- Generación de **reportes** de seguridad.
-- Ejercicios de **remediación asistida por GitHub Copilot**.
+- **Publicar SARIF en la pestaña Security**: convertir el JSON de ZAP a
+  SARIF y subirlo con `github/codeql-action/upload-sarif` para que los
+  hallazgos aparezcan como code scanning alerts.
+- **Escaneos autenticados**: configurar un contexto ZAP con login
+  (form-based) para que el full-scan recorra rutas detrás del auth de
+  Juice Shop.
+- **Pinnear GitHub Actions por SHA** (no solo por tag) para hardening
+  de supply-chain — ver [docs/Reproducibility.md](docs/Reproducibility.md).
+- **Añadir más vulnerabilidades** al `vulnerable-api` (SSRF, XXE,
+  IDOR…) siguiendo el mismo patrón "un endpoint = una vuln".
+- **Complementar con SAST/SCA**: agregar CodeQL y `npm audit` /
+  Dependabot al pipeline para mostrar la diferencia entre estático y
+  dinámico.
+- **Endpoint hardened en Kubernetes**: reescribir el proxy Caddy como
+  Ingress con las mismas anotaciones para mostrar que el patrón escala.
 
 ---
 
