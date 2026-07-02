@@ -1,12 +1,13 @@
-# Workflow DAST: escanea OWASP Juice Shop con OWASP ZAP.
+# Workflow DAST: escanea las apps vulnerables del laboratorio con OWASP ZAP.
 #
-# Estrategia:
-#   1. Levanta la aplicación vulnerable con Docker Compose.
-#   2. Espera a que el healthcheck reporte "healthy".
-#   3. Ejecuta zaproxy/action-baseline (o action-full-scan, según input).
-#   4. Sube los reportes HTML/JSON/Markdown como artifacts.
+# Estrategia (matrix):
+#   Para cada target (juice-shop, vulnerable-api) en paralelo:
+#     1. Levanta el servicio con Docker Compose.
+#     2. Espera al healthcheck.
+#     3. Ejecuta zaproxy/action-baseline (o action-full-scan según input).
+#     4. Sube los reportes como artifact independiente.
 #
-# El escaneo no bloquea el pipeline por hallazgos (flag `-I` en cmd_options)
+# El escaneo no bloquea el pipeline por hallazgos (`-I` en cmd_options)
 # para no romper PRs; en un pipeline productivo real esto se ajusta.
 
 name: dast
@@ -14,6 +15,15 @@ name: dast
 on:
   workflow_dispatch:
     inputs:
+      target:
+        description: "App(s) a escanear"
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - juice-shop
+          - vulnerable-api
       scan_type:
         description: "Tipo de escaneo a ejecutar"
         required: true
@@ -27,6 +37,7 @@ on:
     paths:
       - "docker-compose.yml"
       - "zap/**"
+      - "app-vulnerable-api/**"
       - ".github/workflows/dast.yml"
   schedule:
     # Todos los lunes a las 06:00 UTC
@@ -40,62 +51,87 @@ permissions:
   issues: write
 
 jobs:
+  setup:
+    name: Resolve matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.build.outputs.matrix }}
+    steps:
+      - id: build
+        env:
+          TARGET_INPUT: ${{ github.event.inputs.target || 'all' }}
+        run: |
+          set -euo pipefail
+          juice='{"name":"juice-shop","service":"juice-shop","url":"http://localhost:3000"}'
+          vuln='{"name":"vulnerable-api","service":"vulnerable-api","url":"http://localhost:4000"}'
+          case "${TARGET_INPUT}" in
+            juice-shop)     matrix="{\"target\":[${juice}]}" ;;
+            vulnerable-api) matrix="{\"target\":[${vuln}]}" ;;
+            *)              matrix="{\"target\":[${juice},${vuln}]}" ;;
+          esac
+          echo "matrix=${matrix}" >> "$GITHUB_OUTPUT"
+          echo "Resolved matrix: ${matrix}"
+
   zap-scan:
-    name: OWASP ZAP scan
+    name: "ZAP ${{ matrix.target.name }}"
+    needs: setup
     runs-on: ubuntu-latest
     timeout-minutes: 45
 
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
+
     env:
       SCAN_TYPE: ${{ github.event.inputs.scan_type || 'baseline' }}
-      TARGET_URL: http://localhost:3000
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Start Juice Shop
-        run: docker compose up -d juice-shop
+      - name: Start ${{ matrix.target.service }}
+        run: docker compose up -d --build ${{ matrix.target.service }}
 
-      - name: Wait for Juice Shop to be healthy
+      - name: Wait for ${{ matrix.target.service }} to be healthy
         run: |
           set -euo pipefail
           for i in {1..30}; do
-            status=$(docker inspect --format '{{.State.Health.Status}}' juice-shop 2>/dev/null || echo "starting")
+            status=$(docker inspect --format '{{.State.Health.Status}}' "${{ matrix.target.service }}" 2>/dev/null || echo "starting")
             echo "attempt $i - health: $status"
             if [[ "$status" == "healthy" ]]; then
               exit 0
             fi
             sleep 5
           done
-          echo "::error::Juice Shop no alcanzó estado healthy"
-          docker compose logs juice-shop
+          echo "::error::${{ matrix.target.service }} no alcanzó estado healthy"
+          docker compose logs "${{ matrix.target.service }}"
           exit 1
 
       - name: Run ZAP baseline scan
         if: env.SCAN_TYPE == 'baseline'
         uses: zaproxy/action-baseline@v0.14.0
         with:
-          target: ${{ env.TARGET_URL }}
+          target: ${{ matrix.target.url }}
           rules_file_name: zap/rules.tsv
           cmd_options: "-I"
           allow_issue_writing: false
           fail_action: false
-          artifact_name: zap-baseline-report
+          artifact_name: zap-baseline-${{ matrix.target.name }}
 
       - name: Run ZAP full scan
         if: env.SCAN_TYPE == 'full'
         uses: zaproxy/action-full-scan@v0.12.0
         with:
-          target: ${{ env.TARGET_URL }}
+          target: ${{ matrix.target.url }}
           rules_file_name: zap/rules.tsv
           cmd_options: "-I"
           allow_issue_writing: false
           fail_action: false
-          artifact_name: zap-full-report
+          artifact_name: zap-full-${{ matrix.target.name }}
 
-      - name: Show Juice Shop logs (on failure)
+      - name: Show ${{ matrix.target.service }} logs (on failure)
         if: failure()
-        run: docker compose logs juice-shop
+        run: docker compose logs "${{ matrix.target.service }}"
 
       - name: Tear down
         if: always()

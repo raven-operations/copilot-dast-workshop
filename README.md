@@ -183,24 +183,27 @@ ejecuta un escaneo automatizado con OWASP ZAP en la nube.
 
 | Evento                        | Acción                                             |
 | ----------------------------- | -------------------------------------------------- |
-| `workflow_dispatch`           | Ejecución manual (permite elegir baseline o full). |
-| `pull_request` sobre `main`   | Solo si cambia `docker-compose.yml`, `zap/**` o el workflow. |
-| `schedule` (lunes 06:00 UTC)  | Escaneo semanal automatizado.                      |
+| `workflow_dispatch`           | Ejecución manual (elegir `target` y `scan_type`).  |
+| `pull_request` sobre `main`   | Cambios en `docker-compose.yml`, `zap/**`, `app-vulnerable-api/**` o el workflow. |
+| `schedule` (lunes 06:00 UTC)  | Escaneo semanal automatizado (ambas apps).         |
 
-### Flujo del job
+### Estrategia matrix
 
-1. `docker compose up -d juice-shop`.
-2. Espera hasta que el healthcheck sea `healthy`.
-3. Ejecuta `zaproxy/action-baseline` (o `action-full-scan` si se elige `full`).
-4. Sube los reportes como artifact (`zap-baseline-report` o `zap-full-report`).
-5. `docker compose down -v` para limpiar recursos.
+El workflow usa `strategy.matrix` para escanear las dos apps en paralelo:
+
+| Job                       | Target                              | Artifact                              |
+| ------------------------- | ----------------------------------- | ------------------------------------- |
+| `ZAP juice-shop`          | `http://localhost:3000` (imagen)    | `zap-<baseline\|full>-juice-shop`     |
+| `ZAP vulnerable-api`      | `http://localhost:4000` (build)     | `zap-<baseline\|full>-vulnerable-api` |
 
 ### Ejecución manual
 
 Desde la pestaña **Actions** del repositorio:
 
 1. Selecciona el workflow **dast**.
-2. `Run workflow` → elige `baseline` o `full`.
+2. `Run workflow` → elige:
+   - **target**: `all` (default), `juice-shop` o `vulnerable-api`.
+   - **scan_type**: `baseline` (default) o `full`.
 3. Al finalizar, descarga los reportes desde la sección **Artifacts** del run.
 
 ---
