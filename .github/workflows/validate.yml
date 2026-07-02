@@ -43,6 +43,8 @@ jobs:
             "scripts/scan.ps1"
             "zap/rules.tsv"
             ".github/workflows/dast.yml"
+            "proxy/Caddyfile"
+            "docs/Remediation.md"
           )
           missing=0
           for f in "${required[@]}"; do

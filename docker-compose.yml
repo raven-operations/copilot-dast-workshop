@@ -2,6 +2,8 @@
 #
 # Servicios:
 #   - juice-shop : aplicación web intencionalmente vulnerable (siempre activa).
+#   - proxy      : reverse proxy Caddy que inyecta security headers.
+#                  Se activa con el perfil "hardened" (etapa de remediación).
 #   - zap        : escáner OWASP ZAP, se activa bajo demanda mediante el perfil
 #                  "scan" (docker compose --profile scan run --rm zap).
 
@@ -26,6 +28,20 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
+    networks:
+      - dast-lab
+
+  proxy:
+    image: caddy:2-alpine
+    container_name: proxy
+    profiles: ["hardened"]
+    depends_on:
+      juice-shop:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./proxy/Caddyfile:/etc/caddy/Caddyfile:ro
     networks:
       - dast-lab
 

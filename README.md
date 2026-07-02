@@ -205,6 +205,27 @@ Desde la pestaña **Actions** del repositorio:
 
 ---
 
+## Remediación con GitHub Copilot
+
+El laboratorio incluye un ejercicio guiado en
+[docs/Remediation.md](docs/Remediation.md) donde se usa **Copilot Chat**
+para generar un reverse proxy (Caddy) que inyecta los security headers
+faltantes que ZAP detecta. Después se re-escanea y se comparan resultados.
+
+Uso rápido:
+
+```bash
+# Levantar el reverse proxy endurecido
+docker compose --profile hardened up -d proxy
+
+# Escanear contra el proxy en lugar de la app directa
+./scripts/scan.sh baseline http://proxy:8080
+```
+
+Resultado medido en este laboratorio: `WARN-NEW` **7 → 4**, `PASS` **59 → 62**.
+
+---
+
 ## Limpieza
 
 Detener los contenedores manteniendo los datos:

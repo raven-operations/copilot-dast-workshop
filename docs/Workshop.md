@@ -37,5 +37,5 @@ Al finalizar el workshop, el participante sera capaz de:
 - [x] Etapa 1: aplicacion vulnerable operativa con Docker Compose.
 - [x] Etapa 2a: escaneo local con OWASP ZAP (baseline / full).
 - [x] Etapa 2b: workflow de GitHub Actions `dast` (baseline / full / schedule).
-- [ ] Etapa 2c: remediacion asistida por GitHub Copilot.
+- [x] Etapa 2c: remediacion asistida por GitHub Copilot (reverse proxy Caddy).
 - [ ] Etapa 2d: publicacion de SARIF en la pestana Security (opcional).

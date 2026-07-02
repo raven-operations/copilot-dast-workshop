@@ -1,13 +1,16 @@
-# Ejecuta un escaneo DAST (baseline por defecto) con OWASP ZAP contra
-# la instancia local de Juice Shop.
+# Ejecuta un escaneo DAST (baseline por defecto) con OWASP ZAP.
 #
 # Uso:
-#   ./scripts/scan.ps1              # baseline (rapido, pasivo)
-#   ./scripts/scan.ps1 full         # full scan (activo, mas lento)
+#   ./scripts/scan.ps1                                 # baseline vs juice-shop
+#   ./scripts/scan.ps1 full                            # full scan vs juice-shop
+#   ./scripts/scan.ps1 baseline http://proxy:8080     # baseline vs proxy endurecido
+#   ./scripts/scan.ps1 full     http://proxy:8080     # full scan vs proxy endurecido
 
 param(
     [ValidateSet("baseline", "full")]
-    [string]$Mode = "baseline"
+    [string]$Mode = "baseline",
+
+    [string]$Target = "http://juice-shop:3000"
 )
 
 $ErrorActionPreference = "Stop"
@@ -17,6 +20,11 @@ $ProjectDir = Split-Path -Parent $ScriptDir
 
 Set-Location $ProjectDir
 
+# Slug del target para nombrar los reportes.
+$TargetSlug = ($Target -replace '^https?://', '') -replace '[/:]', '_'
+$TargetSlug = $TargetSlug.TrimEnd('_')
+$ReportBase = "zap-$Mode-$TargetSlug"
+
 Write-Host "[scan] Verificando que juice-shop este corriendo..."
 $running = docker compose ps --status running --services
 if ($running -notcontains "juice-shop") {
@@ -24,29 +32,37 @@ if ($running -notcontains "juice-shop") {
     docker compose up -d juice-shop
 }
 
+if ($Target -match "proxy") {
+    $running = docker compose ps --status running --services
+    if ($running -notcontains "proxy") {
+        Write-Host "[scan] proxy no esta activo. Levantandolo (profile hardened)..."
+        docker compose --profile hardened up -d proxy
+    }
+}
+
 New-Item -ItemType Directory -Force -Path "reports" | Out-Null
 
 switch ($Mode) {
     "baseline" {
-        Write-Host "[scan] Ejecutando ZAP baseline scan..."
+        Write-Host "[scan] Ejecutando ZAP baseline scan contra $Target..."
         docker compose --profile scan run --rm zap `
             zap-baseline.py `
-            -t http://juice-shop:3000 `
+            -t $Target `
             -c /zap/config/rules.tsv `
-            -r zap-baseline-report.html `
-            -J zap-baseline-report.json `
-            -w zap-baseline-report.md `
+            -r "$ReportBase.html" `
+            -J "$ReportBase.json" `
+            -w "$ReportBase.md" `
             -I
     }
     "full" {
-        Write-Host "[scan] Ejecutando ZAP full scan (esto puede tardar 10-30 min)..."
+        Write-Host "[scan] Ejecutando ZAP full scan contra $Target (puede tardar 10-30 min)..."
         docker compose --profile scan run --rm zap `
             zap-full-scan.py `
-            -t http://juice-shop:3000 `
+            -t $Target `
             -c /zap/config/rules.tsv `
-            -r zap-full-report.html `
-            -J zap-full-report.json `
-            -w zap-full-report.md `
+            -r "$ReportBase.html" `
+            -J "$ReportBase.json" `
+            -w "$ReportBase.md" `
             -I
     }
 }
