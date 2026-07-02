@@ -1,7 +1,9 @@
 # Docker Compose para el laboratorio "GitHub Copilot + OWASP ZAP (DAST)".
 #
-# Etapa 1: únicamente se levanta la aplicación vulnerable OWASP Juice Shop.
-# En etapas posteriores del workshop se añadirá el servicio de OWASP ZAP.
+# Servicios:
+#   - juice-shop : aplicación web intencionalmente vulnerable (siempre activa).
+#   - zap        : escáner OWASP ZAP, se activa bajo demanda mediante el perfil
+#                  "scan" (docker compose --profile scan run --rm zap).
 
 services:
   juice-shop:
@@ -13,13 +15,42 @@ services:
     environment:
       NODE_ENV: unsafe
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3000/rest/admin/application-version"]
+      # La imagen de juice-shop es distroless y node no está en el PATH;
+      # invocamos el binario por su ruta absoluta.
+      test:
+        - "CMD"
+        - "/nodejs/bin/node"
+        - "-e"
+        - "require('http').get('http://localhost:3000/rest/admin/application-version', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
       interval: 15s
       timeout: 5s
       retries: 5
       start_period: 20s
     networks:
       - dast-lab
+
+  zap:
+    image: ghcr.io/zaproxy/zaproxy:stable
+    container_name: zap
+    profiles: ["scan"]
+    depends_on:
+      juice-shop:
+        condition: service_healthy
+    volumes:
+      - ./reports:/zap/wrk:rw
+      - ./zap:/zap/config:ro
+    networks:
+      - dast-lab
+    # Escaneo baseline (pasivo, rápido). Se puede sobreescribir con:
+    #   docker compose --profile scan run --rm zap zap-full-scan.py ...
+    command: >
+      zap-baseline.py
+      -t http://juice-shop:3000
+      -c /zap/config/rules.tsv
+      -r zap-baseline-report.html
+      -J zap-baseline-report.json
+      -w zap-baseline-report.md
+      -I
 
 networks:
   dast-lab:

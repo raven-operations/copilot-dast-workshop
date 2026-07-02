@@ -46,6 +46,8 @@ flowchart LR
     Dev["Participante<br/>(VS Code + Copilot)"] -->|docker compose up| Compose["Docker Compose"]
     Compose --> Juice["OWASP Juice Shop<br/>contenedor"]
     Browser["Navegador<br/>http://localhost:3000"] --> Juice
+    ZAP["OWASP ZAP<br/>(profile: scan)"] -->|escanea| Juice
+    ZAP -->|reportes| Reports[("reports/")]
 ```
 
 Componentes:
@@ -128,6 +130,37 @@ Alternativamente, puedes usar los scripts incluidos:
 
 3. Si todo funciona correctamente, verás la página principal de
    **OWASP Juice Shop**.
+
+---
+
+## Escaneo DAST con OWASP ZAP
+
+El laboratorio incluye un servicio `zap` en `docker-compose.yml` bajo el
+perfil `scan`. Se ejecuta bajo demanda y no arranca con `docker compose up`.
+
+Ejecutar un escaneo **baseline** (rápido, pasivo):
+
+```bash
+./scripts/scan.sh
+# o
+docker compose --profile scan run --rm zap
+```
+
+Ejecutar un **full scan** (activo, tarda más):
+
+```bash
+./scripts/scan.sh full
+```
+
+En Windows (PowerShell):
+
+```powershell
+./scripts/scan.ps1
+./scripts/scan.ps1 full
+```
+
+Los reportes se generan en [`reports/`](reports/) en formatos HTML, JSON y
+Markdown. Las reglas personalizadas viven en [`zap/rules.tsv`](zap/rules.tsv).
 
 ---
 

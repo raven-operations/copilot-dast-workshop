@@ -36,9 +36,12 @@ jobs:
             "scripts/start.sh"
             "scripts/stop.sh"
             "scripts/cleanup.sh"
+            "scripts/scan.sh"
             "scripts/start.ps1"
             "scripts/stop.ps1"
             "scripts/cleanup.ps1"
+            "scripts/scan.ps1"
+            "zap/rules.tsv"
           )
           missing=0
           for f in "${required[@]}"; do

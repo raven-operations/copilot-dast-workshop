@@ -55,7 +55,57 @@ Deberias ver la pagina principal de OWASP Juice Shop.
 Navega libremente. Esta aplicacion sera el objetivo de los escaneos DAST
 en la etapa 2 del workshop.
 
-## Paso 7 - Detener el laboratorio
+## Paso 7 - Ejecutar un escaneo DAST con OWASP ZAP
+
+El laboratorio incluye un servicio `zap` en `docker-compose.yml` bajo el
+perfil `scan`, de forma que no se levanta durante `docker compose up -d` y
+solo corre bajo demanda.
+
+### Opcion A - Script
+
+- macOS / Linux:
+
+  ```bash
+  ./scripts/scan.sh              # baseline (rapido, pasivo, ~2 min)
+  ./scripts/scan.sh full         # full scan (activo, 10-30 min)
+  ```
+
+- Windows (PowerShell):
+
+  ```powershell
+  ./scripts/scan.ps1
+  ./scripts/scan.ps1 full
+  ```
+
+### Opcion B - Docker Compose directo
+
+```bash
+docker compose --profile scan run --rm zap
+```
+
+### Revisar los reportes
+
+Los reportes se generan en `reports/`:
+
+| Archivo                          | Formato       | Uso sugerido                          |
+| -------------------------------- | ------------- | ------------------------------------- |
+| `zap-baseline-report.html`       | HTML          | Abrir en el navegador para revisar.   |
+| `zap-baseline-report.json`       | JSON          | Ingesta por herramientas / scripts.   |
+| `zap-baseline-report.md`         | Markdown      | Compartir en PRs o documentacion.     |
+
+Abrir el HTML en macOS:
+
+```bash
+open reports/zap-baseline-report.html
+```
+
+### Personalizar reglas
+
+El archivo [`zap/rules.tsv`](../zap/rules.tsv) permite marcar reglas como
+`IGNORE`, `WARN` o `FAIL`. Se monta como `/zap/config/rules.tsv` dentro
+del contenedor.
+
+## Paso 8 - Detener el laboratorio
 
 Detener manteniendo contenedores:
 

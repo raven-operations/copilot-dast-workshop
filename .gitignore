@@ -18,9 +18,10 @@ tmp/
 *.pid
 *.seed
 
-# --- Reportes generados (etapas posteriores del workshop) ---
-reports/
+# --- Reportes generados por ZAP ---
+reports/*
 !reports/.gitkeep
+!reports/README.md
 
 # --- Node (por si se agrega tooling local) ---
 node_modules/

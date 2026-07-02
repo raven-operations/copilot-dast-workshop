@@ -1,0 +1,2 @@
+# Placeholder para conservar la carpeta reports/ en Git.
+# Los reportes generados por ZAP están excluidos vía .gitignore.
