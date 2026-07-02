@@ -46,9 +46,9 @@ jobs:
             "proxy/Caddyfile"
             "docs/Remediation.md"
             "docs/RemediationCode.md"
-            "app/vulnerable-api/package.json"
-            "app/vulnerable-api/Dockerfile"
-            "app/vulnerable-api/src/server.js"
+            "app-vulnerable-api/package.json"
+            "app-vulnerable-api/Dockerfile"
+            "app-vulnerable-api/src/server.js"
           )
           missing=0
           for f in "${required[@]}"; do

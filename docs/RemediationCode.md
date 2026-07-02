@@ -16,16 +16,16 @@ mantiene tu equipo **sí son tuyas**. Ahí el proxy solo esconde el
 problema — la solución correcta es arreglar el código.
 
 Para demostrarlo, el laboratorio incluye una segunda aplicación:
-[`app/vulnerable-api/`](../app/vulnerable-api/) — una API Node.js/Express
+[`app-vulnerable-api/`](../app-vulnerable-api/) — una API Node.js/Express
 con **cuatro vulnerabilidades canónicas del OWASP Top 10**, una por
 endpoint.
 
 | Endpoint                | Vulnerabilidad     | OWASP Top 10 | Archivo                                                             |
 | ----------------------- | ------------------ | ------------ | ------------------------------------------------------------------- |
-| `GET /users/search`     | SQL Injection      | A03:2021     | [`src/routes/users.js`](../app/vulnerable-api/src/routes/users.js)  |
-| `GET /greet`            | Reflected XSS      | A03:2021     | [`src/routes/greet.js`](../app/vulnerable-api/src/routes/greet.js)  |
-| `GET /ping`             | Command Injection  | A03:2021     | [`src/routes/ping.js`](../app/vulnerable-api/src/routes/ping.js)    |
-| `GET /files`            | Path Traversal     | A01:2021     | [`src/routes/files.js`](../app/vulnerable-api/src/routes/files.js)  |
+| `GET /users/search`     | SQL Injection      | A03:2021     | [`src/routes/users.js`](../app-vulnerable-api/src/routes/users.js)  |
+| `GET /greet`            | Reflected XSS      | A03:2021     | [`src/routes/greet.js`](../app-vulnerable-api/src/routes/greet.js)  |
+| `GET /ping`             | Command Injection  | A03:2021     | [`src/routes/ping.js`](../app-vulnerable-api/src/routes/ping.js)    |
+| `GET /files`            | Path Traversal     | A01:2021     | [`src/routes/files.js`](../app-vulnerable-api/src/routes/files.js)  |
 
 ---
 
@@ -87,7 +87,7 @@ const rows = db.prepare(sql).all();
 
 ### Prompt para Copilot Chat
 
-> El archivo `app/vulnerable-api/src/routes/users.js` es vulnerable a
+> El archivo `app-vulnerable-api/src/routes/users.js` es vulnerable a
 > **SQL Injection** porque concatena el parámetro `name` directamente en
 > la query. Refactorízalo para usar **prepared statements con parámetros
 > ligados** (better-sqlite3 soporta `?`). Mantén la búsqueda por
@@ -132,7 +132,7 @@ res.type('html').send(html);
 
 ### Prompt para Copilot Chat
 
-> `app/vulnerable-api/src/routes/greet.js` sufre **Reflected XSS**
+> `app-vulnerable-api/src/routes/greet.js` sufre **Reflected XSS**
 > porque interpola `name` en HTML sin escapar. Refactorízalo para
 > escapar entidades HTML (`<`, `>`, `"`, `'`, `&`). No uses librerías
 > externas si podemos evitarlo — implementa una función `escapeHtml`
@@ -180,7 +180,7 @@ exec(`ping -c 1 -W 1 ${host}`, ..., cb);
 
 ### Prompt para Copilot Chat
 
-> `app/vulnerable-api/src/routes/ping.js` es vulnerable a **Command
+> `app-vulnerable-api/src/routes/ping.js` es vulnerable a **Command
 > Injection** porque interpola `host` en un string ejecutado por shell.
 > Refactorízalo para:
 >
@@ -241,7 +241,7 @@ fs.readFile(filePath, 'utf-8', ...);
 
 ### Prompt para Copilot Chat
 
-> `app/vulnerable-api/src/routes/files.js` es vulnerable a **Path
+> `app-vulnerable-api/src/routes/files.js` es vulnerable a **Path
 > Traversal**. Refactorízalo para:
 >
 > 1. Resolver la ruta final con `path.resolve(BASE_DIR, name)`.

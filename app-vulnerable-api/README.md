@@ -21,7 +21,7 @@ Cada endpoint contiene UNA vulnerabilidad canónica del OWASP Top 10.
 | GET    | `/ping?host=`           | Command Injection      | A03:2021     |
 | GET    | `/files?name=`          | Path Traversal         | A01:2021     |
 
-Ver [../../docs/RemediationCode.md](../../docs/RemediationCode.md) para el
+Ver [../docs/RemediationCode.md](../docs/RemediationCode.md) para el
 guion de remediación paso a paso con Copilot Chat.
 
 ## Ejecución
