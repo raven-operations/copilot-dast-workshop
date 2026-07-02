@@ -1,8 +1,12 @@
-# Remediación asistida por GitHub Copilot
+# Remediación asistida por GitHub Copilot — Enfoque A: sin acceso al código
 
-> Guion del **módulo 5** del workshop.
-> Aquí demostramos cómo **Copilot Chat** acelera el ciclo:
-> _hallazgo DAST → interpretación → propuesta de fix → verificación_.
+> Guion del **módulo 5a** del workshop.
+> Este documento cubre el **primer enfoque** de remediación DAST: cuando
+> el código vulnerable **no es tuyo** (SaaS, imagen de terceros, monolito
+> legacy) y solo puedes intervenir por delante.
+>
+> El **segundo enfoque** —arreglar el código en la fuente— está en
+> [`RemediationCode.md`](RemediationCode.md).
 
 ---
 

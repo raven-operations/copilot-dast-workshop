@@ -45,6 +45,10 @@ jobs:
             ".github/workflows/dast.yml"
             "proxy/Caddyfile"
             "docs/Remediation.md"
+            "docs/RemediationCode.md"
+            "app/vulnerable-api/package.json"
+            "app/vulnerable-api/Dockerfile"
+            "app/vulnerable-api/src/server.js"
           )
           missing=0
           for f in "${required[@]}"; do

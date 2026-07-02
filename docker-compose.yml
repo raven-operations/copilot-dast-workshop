@@ -1,11 +1,16 @@
 # Docker Compose para el laboratorio "GitHub Copilot + OWASP ZAP (DAST)".
 #
 # Servicios:
-#   - juice-shop : aplicación web intencionalmente vulnerable (siempre activa).
-#   - proxy      : reverse proxy Caddy que inyecta security headers.
-#                  Se activa con el perfil "hardened" (etapa de remediación).
-#   - zap        : escáner OWASP ZAP, se activa bajo demanda mediante el perfil
-#                  "scan" (docker compose --profile scan run --rm zap).
+#   - juice-shop     : app vulnerable de terceros (imagen inmutable).
+#                      Sirve para el enfoque "remediación sin acceso al código"
+#                      (mitigación con reverse proxy).
+#   - vulnerable-api : app propia Node.js con vulnerabilidades canónicas
+#                      (SQLi, XSS, cmd injection, path traversal). Sirve para
+#                      el enfoque "remediación en el código" con Copilot.
+#   - proxy          : reverse proxy Caddy que inyecta security headers.
+#                      Se activa con el perfil "hardened" (etapa de remediación).
+#   - zap            : escáner OWASP ZAP, se activa bajo demanda con el perfil
+#                      "scan" (docker compose --profile scan run --rm zap).
 
 services:
   juice-shop:
@@ -28,6 +33,25 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
+    networks:
+      - dast-lab
+
+  vulnerable-api:
+    build: ./app/vulnerable-api
+    container_name: vulnerable-api
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    healthcheck:
+      test:
+        - "CMD"
+        - "node"
+        - "-e"
+        - "require('http').get('http://localhost:4000/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     networks:
       - dast-lab
 

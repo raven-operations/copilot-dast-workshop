@@ -207,12 +207,15 @@ Desde la pestaña **Actions** del repositorio:
 
 ## Remediación con GitHub Copilot
 
-El laboratorio incluye un ejercicio guiado en
-[docs/Remediation.md](docs/Remediation.md) donde se usa **Copilot Chat**
-para generar un reverse proxy (Caddy) que inyecta los security headers
-faltantes que ZAP detecta. Después se re-escanea y se comparan resultados.
+El laboratorio cubre **dos enfoques complementarios** de remediación DAST
+con Copilot:
 
-Uso rápido:
+| Enfoque | Cuándo aplica                                | App demo                        | Fix        | Guía |
+| ------- | --------------------------------------------- | ------------------------------- | ---------- | ----- |
+| **A**   | No tenemos el código (SaaS, imagen de 3ros)   | OWASP Juice Shop (`:3000`)      | Reverse proxy Caddy con security headers | [docs/Remediation.md](docs/Remediation.md) |
+| **B**   | Tenemos el código (app propia)               | `vulnerable-api` (`:4000`)      | Refactor con `execFile`, prepared stmts, escape HTML, `path.resolve` | [docs/RemediationCode.md](docs/RemediationCode.md) |
+
+Uso rápido del enfoque A:
 
 ```bash
 # Levantar el reverse proxy endurecido
@@ -222,7 +225,20 @@ docker compose --profile hardened up -d proxy
 ./scripts/scan.sh baseline http://proxy:8080
 ```
 
-Resultado medido en este laboratorio: `WARN-NEW` **7 → 4**, `PASS` **59 → 62**.
+Resultado medido: `WARN-NEW` **7 → 4**, `PASS` **59 → 62**.
+
+Uso rápido del enfoque B:
+
+```bash
+# La app queda accesible en http://localhost:4000
+docker compose up -d vulnerable-api
+
+# Explotar la SQLi (antes del fix)
+curl -sG "http://localhost:4000/users/search" --data-urlencode "name=' OR '1'='1"
+```
+
+Luego seguir el guión por vulnerabilidad de
+[docs/RemediationCode.md](docs/RemediationCode.md).
 
 ---
 

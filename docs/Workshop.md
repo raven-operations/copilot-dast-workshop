@@ -37,5 +37,7 @@ Al finalizar el workshop, el participante sera capaz de:
 - [x] Etapa 1: aplicacion vulnerable operativa con Docker Compose.
 - [x] Etapa 2a: escaneo local con OWASP ZAP (baseline / full).
 - [x] Etapa 2b: workflow de GitHub Actions `dast` (baseline / full / schedule).
-- [x] Etapa 2c: remediacion asistida por GitHub Copilot (reverse proxy Caddy).
+- [x] Etapa 2c: remediacion asistida por GitHub Copilot.
+  - Enfoque A (sin código fuente): reverse proxy Caddy vs Juice Shop.
+  - Enfoque B (con código fuente): refactor de `vulnerable-api` con Copilot.
 - [ ] Etapa 2d: publicacion de SARIF en la pestana Security (opcional).
