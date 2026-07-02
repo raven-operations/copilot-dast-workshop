@@ -49,8 +49,12 @@ jobs:
             "docs/Remediation.md"
             "docs/RemediationCode.md"
             "app-vulnerable-api/package.json"
+            "app-vulnerable-api/package-lock.json"
             "app-vulnerable-api/Dockerfile"
             "app-vulnerable-api/src/server.js"
+            "docs/Reproducibility.md"
+            "docs/prompts/scenario-a.md"
+            "docs/prompts/scenario-b.md"
           )
           missing=0
           for f in "${required[@]}"; do
@@ -66,3 +70,21 @@ jobs:
 
       - name: Validate docker-compose syntax
         run: docker compose -f docker-compose.yml config --quiet
+
+      - name: Check pinned image tags (no moving tags)
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Un laboratorio reproducible no puede depender de tags moviles
+          # (latest, stable, edge). Ver docs/Reproducibility.md.
+          if grep -EHn 'image:\s*\S+:(latest|stable|edge)\b' docker-compose.yml; then
+            echo "::error::Se detectaron tags moviles en docker-compose.yml"
+            exit 1
+          fi
+          echo "OK: todas las imagenes estan pineadas."
+
+      - name: Verify lockfile is in sync
+        working-directory: app-vulnerable-api
+        # 'npm ci' falla si package.json y package-lock.json estan desincronizados.
+        # --dry-run evita instalar; solo valida.
+        run: npm ci --omit=dev --dry-run

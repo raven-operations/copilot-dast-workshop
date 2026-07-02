@@ -14,7 +14,9 @@
 
 services:
   juice-shop:
-    image: bkimminich/juice-shop:latest
+    # Pin exacto para que los hallazgos del escaneo sean reproducibles.
+    # Ver docs/Reproducibility.md para la politica de pinning.
+    image: bkimminich/juice-shop:v20.1.1
     container_name: juice-shop
     restart: unless-stopped
     ports:
@@ -56,7 +58,7 @@ services:
       - dast-lab
 
   proxy:
-    image: caddy:2-alpine
+    image: caddy:2.11.4-alpine
     container_name: proxy
     profiles: ["hardened"]
     depends_on:
@@ -70,7 +72,7 @@ services:
       - dast-lab
 
   zap:
-    image: ghcr.io/zaproxy/zaproxy:stable
+    image: ghcr.io/zaproxy/zaproxy:2.17.0
     container_name: zap
     profiles: ["scan"]
     depends_on:

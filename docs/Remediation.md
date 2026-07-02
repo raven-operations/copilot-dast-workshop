@@ -7,6 +7,9 @@
 >
 > El **segundo enfoque** —arreglar el código en la fuente— está en
 > [`RemediationCode.md`](RemediationCode.md).
+>
+> **Cheat sheet de prompts (copy/paste):**
+> [`docs/prompts/scenario-a.md`](prompts/scenario-a.md).
 
 ---
 

@@ -259,10 +259,10 @@ Desde la pestaña **Actions** del repositorio:
 El laboratorio cubre **dos enfoques complementarios** de remediación DAST
 con Copilot:
 
-| Enfoque | Cuándo aplica                                | App demo                        | Fix        | Guía |
-| ------- | --------------------------------------------- | ------------------------------- | ---------- | ----- |
-| **A**   | No tenemos el código (SaaS, imagen de 3ros)   | OWASP Juice Shop (`:3000`)      | Reverse proxy Caddy con security headers | [docs/Remediation.md](docs/Remediation.md) |
-| **B**   | Tenemos el código (app propia)               | `vulnerable-api` (`:4000`)      | Refactor con `execFile`, prepared stmts, escape HTML, `path.resolve` | [docs/RemediationCode.md](docs/RemediationCode.md) |
+| Enfoque | Cuándo aplica                                | App demo                        | Fix        | Guía completa | Cheat sheet de prompts |
+| ------- | --------------------------------------------- | ------------------------------- | ---------- | ------------- | ---------------------- |
+| **A**   | No tenemos el código (SaaS, imagen de 3ros)   | OWASP Juice Shop (`:3000`)      | Reverse proxy Caddy con security headers | [docs/Remediation.md](docs/Remediation.md) | [docs/prompts/scenario-a.md](docs/prompts/scenario-a.md) |
+| **B**   | Tenemos el código (app propia)               | `vulnerable-api` (`:4000`)      | Refactor con `execFile`, prepared stmts, escape HTML, `path.resolve` | [docs/RemediationCode.md](docs/RemediationCode.md) | [docs/prompts/scenario-b.md](docs/prompts/scenario-b.md) |
 
 Uso rápido del enfoque A:
 
@@ -288,6 +288,32 @@ curl -sG "http://localhost:4000/users/search" --data-urlencode "name=' OR '1'='1
 
 Luego seguir el guión por vulnerabilidad de
 [docs/RemediationCode.md](docs/RemediationCode.md).
+
+---
+
+## Reproducibilidad
+
+Todos los componentes del laboratorio están **pineados a versiones exactas**
+para que los resultados del escaneo, las tablas antes/después y los prompts
+de Copilot se puedan reproducir hoy y dentro de un año.
+
+| Componente          | Versión pineada     |
+| ------------------- | ------------------- |
+| OWASP Juice Shop    | `v20.1.1`           |
+| OWASP ZAP           | `2.17.0`            |
+| Caddy               | `2.11.4-alpine`     |
+| Node.js (base API)  | `20.20-slim`        |
+| Deps npm de la API  | `package-lock.json` (`npm ci`) |
+
+El workflow [`validate`](.github/workflows/validate.yml) falla si:
+
+- Alguna `image:` en `docker-compose.yml` usa un tag móvil
+  (`latest`, `stable`, `edge`).
+- `package.json` y `package-lock.json` de la API están desincronizados
+  (`npm ci --dry-run`).
+
+Detalles completos y guía para actualizar versiones en
+[docs/Reproducibility.md](docs/Reproducibility.md).
 
 ---
 

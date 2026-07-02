@@ -5,6 +5,9 @@
 > vulnerable **sí es tuyo** y puedes arreglar la raíz del problema.
 > Complementa el enfoque de reverse proxy documentado en
 > [`Remediation.md`](Remediation.md).
+>
+> **Cheat sheet de prompts (copy/paste):**
+> [`docs/prompts/scenario-b.md`](prompts/scenario-b.md).
 
 ---
 
