@@ -44,29 +44,75 @@ En etapas posteriores del workshop se incorporarán:
 
 ## Arquitectura
 
+El laboratorio contiene **dos escenarios** independientes con la misma
+orquestación de Docker Compose. Cada uno enseña un enfoque distinto de
+remediación asistida por Copilot.
+
+### Escenario A — Juice Shop (sin acceso al código)
+
+Target de terceros; la remediación se hace **desde afuera** con un
+reverse proxy Caddy que inyecta headers de seguridad.
+
 ```mermaid
 flowchart LR
     Dev["Participante<br>VS Code + Copilot"]
     Compose["Docker Compose"]
-    Juice["OWASP Juice Shop<br>contenedor"]
-    Browser["Navegador<br>localhost:3000"]
-    ZAP["OWASP ZAP<br>profile: scan"]
+    Juice["OWASP Juice Shop<br>:3000"]
+    Proxy["Caddy Reverse Proxy<br>:8080 · profile hardened"]
+    Browser["Navegador"]
+    ZAP["OWASP ZAP<br>profile scan"]
     Reports[("reports/")]
 
     Dev -->|docker compose up| Compose
     Compose --> Juice
+    Compose -.->|profile hardened| Proxy
+    Proxy --> Juice
     Browser --> Juice
-    ZAP -->|escanea| Juice
-    ZAP -->|reportes| Reports
+    Browser -.-> Proxy
+    ZAP -->|baseline / full| Juice
+    ZAP -.->|baseline / full| Proxy
+    ZAP -->|HTML · JSON · MD| Reports
 ```
 
-Componentes:
+Flujo típico: escaneo → hallazgos de headers → Copilot Chat genera el
+`Caddyfile` → segundo escaneo contra `:8080` → hallazgos reducidos.
 
-| Componente        | Descripción                                                |
+### Escenario B — Vulnerable API (con acceso al código)
+
+App propia con vulnerabilidades incrustadas (SQLi, XSS, CmdInjection,
+PathTraversal). La remediación se hace **en el código fuente** y se
+rebuildea el contenedor.
+
+```mermaid
+flowchart LR
+    Dev["Participante<br>VS Code + Copilot"]
+    Compose["Docker Compose"]
+    Src["app-vulnerable-api/src/<br>Express + SQLite"]
+    API["vulnerable-api<br>:4000"]
+    Curl["curl / navegador"]
+    ZAP["OWASP ZAP<br>profile scan"]
+    Reports[("reports/")]
+
+    Dev -->|edita con Copilot| Src
+    Src -->|build| API
+    Dev -->|docker compose up --build| Compose
+    Compose --> API
+    Curl --> API
+    ZAP -->|baseline / full| API
+    ZAP -->|HTML · JSON · MD| Reports
+```
+
+Flujo típico: exploit con `curl` → Copilot Chat refactoriza la ruta
+vulnerable → `docker compose up -d --build vulnerable-api` → exploit
+falla → escaneo confirma.
+
+### Componentes comunes
+
+| Componente        | Rol                                                        |
 | ----------------- | ---------------------------------------------------------- |
-| Docker Compose    | Orquesta los servicios del laboratorio.                    |
-| OWASP Juice Shop  | Aplicación web intencionalmente vulnerable.                |
-| Navegador         | Punto de acceso del usuario a la aplicación.               |
+| Docker Compose    | Orquesta todos los servicios del laboratorio.              |
+| OWASP ZAP         | Escáner DAST (baseline / full); perfil `scan` on-demand.   |
+| GitHub Actions    | Workflow `dast` que corre ambos escenarios en CI (matrix). |
 
 ---
 
