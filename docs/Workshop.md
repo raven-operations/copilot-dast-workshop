@@ -35,6 +35,7 @@ Al finalizar el workshop, el participante sera capaz de:
 ## Estado actual del laboratorio
 
 - [x] Etapa 1: aplicacion vulnerable operativa con Docker Compose.
-- [ ] Etapa 2: integracion de OWASP ZAP.
-- [ ] Etapa 2: workflows de GitHub Actions para DAST.
-- [ ] Etapa 2: generacion de reportes.
+- [x] Etapa 2a: escaneo local con OWASP ZAP (baseline / full).
+- [x] Etapa 2b: workflow de GitHub Actions `dast` (baseline / full / schedule).
+- [ ] Etapa 2c: remediacion asistida por GitHub Copilot.
+- [ ] Etapa 2d: publicacion de SARIF en la pestana Security (opcional).

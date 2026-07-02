@@ -1,5 +1,8 @@
 # GitHub Copilot + OWASP ZAP (DAST) Workshop
 
+[![validate](https://github.com/clever-devops-tools/copilot-dast-workshop/actions/workflows/validate.yml/badge.svg)](https://github.com/clever-devops-tools/copilot-dast-workshop/actions/workflows/validate.yml)
+[![dast](https://github.com/clever-devops-tools/copilot-dast-workshop/actions/workflows/dast.yml/badge.svg)](https://github.com/clever-devops-tools/copilot-dast-workshop/actions/workflows/dast.yml)
+
 > Laboratorio práctico para aprender a acelerar procesos DevSecOps usando
 > **GitHub Copilot** junto con **Dynamic Application Security Testing (DAST)**.
 
@@ -168,6 +171,37 @@ En Windows (PowerShell):
 
 Los reportes se generan en [`reports/`](reports/) en formatos HTML, JSON y
 Markdown. Las reglas personalizadas viven en [`zap/rules.tsv`](zap/rules.tsv).
+
+---
+
+## DAST en GitHub Actions
+
+El repositorio incluye el workflow [`dast`](.github/workflows/dast.yml) que
+ejecuta un escaneo automatizado con OWASP ZAP en la nube.
+
+### Triggers
+
+| Evento                        | Acción                                             |
+| ----------------------------- | -------------------------------------------------- |
+| `workflow_dispatch`           | Ejecución manual (permite elegir baseline o full). |
+| `pull_request` sobre `main`   | Solo si cambia `docker-compose.yml`, `zap/**` o el workflow. |
+| `schedule` (lunes 06:00 UTC)  | Escaneo semanal automatizado.                      |
+
+### Flujo del job
+
+1. `docker compose up -d juice-shop`.
+2. Espera hasta que el healthcheck sea `healthy`.
+3. Ejecuta `zaproxy/action-baseline` (o `action-full-scan` si se elige `full`).
+4. Sube los reportes como artifact (`zap-baseline-report` o `zap-full-report`).
+5. `docker compose down -v` para limpiar recursos.
+
+### Ejecución manual
+
+Desde la pestaña **Actions** del repositorio:
+
+1. Selecciona el workflow **dast**.
+2. `Run workflow` → elige `baseline` o `full`.
+3. Al finalizar, descarga los reportes desde la sección **Artifacts** del run.
 
 ---
 

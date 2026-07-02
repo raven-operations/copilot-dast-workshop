@@ -1,0 +1,102 @@
+# Workflow DAST: escanea OWASP Juice Shop con OWASP ZAP.
+#
+# Estrategia:
+#   1. Levanta la aplicación vulnerable con Docker Compose.
+#   2. Espera a que el healthcheck reporte "healthy".
+#   3. Ejecuta zaproxy/action-baseline (o action-full-scan, según input).
+#   4. Sube los reportes HTML/JSON/Markdown como artifacts.
+#
+# El escaneo no bloquea el pipeline por hallazgos (flag `-I` en cmd_options)
+# para no romper PRs; en un pipeline productivo real esto se ajusta.
+
+name: dast
+
+on:
+  workflow_dispatch:
+    inputs:
+      scan_type:
+        description: "Tipo de escaneo a ejecutar"
+        required: true
+        default: baseline
+        type: choice
+        options:
+          - baseline
+          - full
+  pull_request:
+    branches: [main]
+    paths:
+      - "docker-compose.yml"
+      - "zap/**"
+      - ".github/workflows/dast.yml"
+  schedule:
+    # Todos los lunes a las 06:00 UTC
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+  # Necesario si en el futuro publicamos SARIF a la pestaña Security.
+  security-events: write
+  # La acción de ZAP puede abrir un issue con el resumen; requiere este permiso.
+  issues: write
+
+jobs:
+  zap-scan:
+    name: OWASP ZAP scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    env:
+      SCAN_TYPE: ${{ github.event.inputs.scan_type || 'baseline' }}
+      TARGET_URL: http://localhost:3000
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Start Juice Shop
+        run: docker compose up -d juice-shop
+
+      - name: Wait for Juice Shop to be healthy
+        run: |
+          set -euo pipefail
+          for i in {1..30}; do
+            status=$(docker inspect --format '{{.State.Health.Status}}' juice-shop 2>/dev/null || echo "starting")
+            echo "attempt $i - health: $status"
+            if [[ "$status" == "healthy" ]]; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::Juice Shop no alcanzó estado healthy"
+          docker compose logs juice-shop
+          exit 1
+
+      - name: Run ZAP baseline scan
+        if: env.SCAN_TYPE == 'baseline'
+        uses: zaproxy/action-baseline@v0.14.0
+        with:
+          target: ${{ env.TARGET_URL }}
+          rules_file_name: zap/rules.tsv
+          cmd_options: "-I"
+          allow_issue_writing: false
+          fail_action: false
+          artifact_name: zap-baseline-report
+
+      - name: Run ZAP full scan
+        if: env.SCAN_TYPE == 'full'
+        uses: zaproxy/action-full-scan@v0.12.0
+        with:
+          target: ${{ env.TARGET_URL }}
+          rules_file_name: zap/rules.tsv
+          cmd_options: "-I"
+          allow_issue_writing: false
+          fail_action: false
+          artifact_name: zap-full-report
+
+      - name: Show Juice Shop logs (on failure)
+        if: failure()
+        run: docker compose logs juice-shop
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v --remove-orphans

@@ -42,6 +42,7 @@ jobs:
             "scripts/cleanup.ps1"
             "scripts/scan.ps1"
             "zap/rules.tsv"
+            ".github/workflows/dast.yml"
           )
           missing=0
           for f in "${required[@]}"; do

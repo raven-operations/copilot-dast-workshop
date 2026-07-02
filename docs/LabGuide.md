@@ -105,7 +105,32 @@ El archivo [`zap/rules.tsv`](../zap/rules.tsv) permite marcar reglas como
 `IGNORE`, `WARN` o `FAIL`. Se monta como `/zap/config/rules.tsv` dentro
 del contenedor.
 
-## Paso 8 - Detener el laboratorio
+## Paso 8 - Ejecutar el escaneo en GitHub Actions
+
+El repositorio incluye el workflow [`dast`](../.github/workflows/dast.yml)
+que corre el mismo escaneo en la nube.
+
+### Ejecucion manual
+
+1. Ir a la pestana **Actions** del repositorio.
+2. Seleccionar el workflow **dast**.
+3. `Run workflow` → elegir `baseline` (default) o `full` → **Run**.
+4. Al finalizar, descargar el reporte desde la seccion **Artifacts**
+   del run (`zap-baseline-report` o `zap-full-report`).
+
+### Ejecucion automatica
+
+- En cada **pull request** hacia `main` que modifique `docker-compose.yml`,
+  `zap/**` o el propio workflow.
+- **Semanalmente** (cron: lunes 06:00 UTC) como monitoreo continuo.
+
+### Consejo para el workshop
+
+Editar `zap/rules.tsv` en una rama, abrir un PR → observar cómo el workflow
+se dispara automáticamente. Pedir a Copilot que sugiera reglas a elevar a
+`FAIL` según los hallazgos del reporte previo.
+
+## Paso 9 - Detener el laboratorio
 
 Detener manteniendo contenedores:
 
