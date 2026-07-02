@@ -11,7 +11,7 @@ OWASP Juice Shop orquestada mediante Docker Compose.
 ```mermaid
 flowchart LR
     Dev["Participante"] --> Browser["Navegador"]
-    Browser --> Juice["OWASP Juice Shop<br/>(contenedor)"]
+    Browser --> Juice["OWASP Juice Shop<br>contenedor"]
     Compose["Docker Compose"] --> Juice
 ```
 

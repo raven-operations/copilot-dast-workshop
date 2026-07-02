@@ -43,11 +43,18 @@ En etapas posteriores del workshop se incorporarán:
 
 ```mermaid
 flowchart LR
-    Dev["Participante<br/>(VS Code + Copilot)"] -->|docker compose up| Compose["Docker Compose"]
-    Compose --> Juice["OWASP Juice Shop<br/>contenedor"]
-    Browser["Navegador<br/>http://localhost:3000"] --> Juice
-    ZAP["OWASP ZAP<br/>(profile: scan)"] -->|escanea| Juice
-    ZAP -->|reportes| Reports[("reports/")]
+    Dev["Participante<br>VS Code + Copilot"]
+    Compose["Docker Compose"]
+    Juice["OWASP Juice Shop<br>contenedor"]
+    Browser["Navegador<br>localhost:3000"]
+    ZAP["OWASP ZAP<br>profile: scan"]
+    Reports[("reports/")]
+
+    Dev -->|docker compose up| Compose
+    Compose --> Juice
+    Browser --> Juice
+    ZAP -->|escanea| Juice
+    ZAP -->|reportes| Reports
 ```
 
 Componentes:
