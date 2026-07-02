@@ -1,0 +1,102 @@
+# Reusable workflow: escanea una app del laboratorio con OWASP ZAP.
+#
+# No se ejecuta por sí solo; se invoca desde workflows específicos
+# por app (dast-juice-shop.yml, dast-vulnerable-api.yml) para que cada
+# app tenga su propio badge de estado.
+#
+# Pasos:
+#   1. Levanta el servicio con Docker Compose.
+#   2. Espera al healthcheck.
+#   3. Ejecuta zaproxy/action-baseline o action-full-scan.
+#   4. Sube los reportes como artifact.
+#
+# El escaneo no bloquea el pipeline por hallazgos (`-I` en cmd_options)
+# para no romper PRs; en un pipeline productivo real esto se ajusta.
+
+name: _dast-reusable
+
+on:
+  workflow_call:
+    inputs:
+      target_name:
+        description: "Nombre corto del target (usado en artifact y job name)."
+        required: true
+        type: string
+      target_service:
+        description: "Nombre del servicio en docker-compose.yml."
+        required: true
+        type: string
+      target_url:
+        description: "URL contra la que apunta ZAP."
+        required: true
+        type: string
+      scan_type:
+        description: "baseline o full."
+        required: false
+        type: string
+        default: baseline
+
+jobs:
+  zap-scan:
+    name: "ZAP ${{ inputs.target_name }}"
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    permissions:
+      contents: read
+      # Necesario si en el futuro publicamos SARIF a la pestaña Security.
+      security-events: write
+      # La acción de ZAP puede abrir un issue con el resumen; requiere este permiso.
+      issues: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Start ${{ inputs.target_service }}
+        run: docker compose up -d --build ${{ inputs.target_service }}
+
+      - name: Wait for ${{ inputs.target_service }} to be healthy
+        run: |
+          set -euo pipefail
+          for i in {1..30}; do
+            status=$(docker inspect --format '{{.State.Health.Status}}' "${{ inputs.target_service }}" 2>/dev/null || echo "starting")
+            echo "attempt $i - health: $status"
+            if [[ "$status" == "healthy" ]]; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::${{ inputs.target_service }} no alcanzó estado healthy"
+          docker compose logs "${{ inputs.target_service }}"
+          exit 1
+
+      - name: Run ZAP baseline scan
+        if: inputs.scan_type == 'baseline'
+        uses: zaproxy/action-baseline@v0.14.0
+        with:
+          target: ${{ inputs.target_url }}
+          rules_file_name: zap/rules.tsv
+          cmd_options: "-I"
+          allow_issue_writing: false
+          fail_action: false
+          artifact_name: zap-baseline-${{ inputs.target_name }}
+
+      - name: Run ZAP full scan
+        if: inputs.scan_type == 'full'
+        uses: zaproxy/action-full-scan@v0.12.0
+        with:
+          target: ${{ inputs.target_url }}
+          rules_file_name: zap/rules.tsv
+          cmd_options: "-I"
+          allow_issue_writing: false
+          fail_action: false
+          artifact_name: zap-full-${{ inputs.target_name }}
+
+      - name: Show ${{ inputs.target_service }} logs (on failure)
+        if: failure()
+        run: docker compose logs "${{ inputs.target_service }}"
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v --remove-orphans

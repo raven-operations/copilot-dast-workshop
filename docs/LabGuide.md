@@ -107,25 +107,27 @@ del contenedor.
 
 ## Paso 8 - Ejecutar el escaneo en GitHub Actions
 
-El repositorio incluye el workflow [`dast`](../.github/workflows/dast.yml)
-que corre el mismo escaneo en la nube.
+El repositorio incluye **un workflow por aplicacion** (cada uno con su
+badge propio) que reutiliza la misma logica interna:
+
+- [`dast-juice-shop`](../.github/workflows/dast-juice-shop.yml)
+- [`dast-vulnerable-api`](../.github/workflows/dast-vulnerable-api.yml)
+- [`_dast-reusable`](../.github/workflows/_dast-reusable.yml) — logica
+  compartida (`workflow_call`); no se ejecuta sola.
 
 ### Ejecucion manual
 
 1. Ir a la pestana **Actions** del repositorio.
-2. Seleccionar el workflow **dast**.
-3. `Run workflow` → elegir:
-   - **target**: `all` (default), `juice-shop` o `vulnerable-api`.
-   - **scan_type**: `baseline` (default) o `full`.
+2. Seleccionar **dast-juice-shop** o **dast-vulnerable-api**.
+3. `Run workflow` → elegir `scan_type` (`baseline` o `full`).
 4. Al finalizar, descargar el reporte desde la seccion **Artifacts**
    del run (`zap-<scan_type>-<target>`).
 
 ### Ejecucion automatica
 
 - En cada **pull request** hacia `main` que modifique `docker-compose.yml`,
-  `zap/**`, `app-vulnerable-api/**` o el propio workflow.
-- **Semanalmente** (cron: lunes 06:00 UTC) como monitoreo continuo,
-  escaneando ambas apps en paralelo.
+  `zap/**`, `app-vulnerable-api/**` o los propios workflows.
+- **Semanalmente** (cron: lunes 06:00 UTC) como monitoreo continuo.
 
 ### Consejo para el workshop
 

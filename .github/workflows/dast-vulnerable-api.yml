@@ -1,0 +1,42 @@
+# DAST contra la vulnerable-api del laboratorio.
+# Wrapper que invoca el workflow reutilizable _dast-reusable.yml.
+# Tener un workflow dedicado permite mostrar un badge de estado propio.
+
+name: dast-vulnerable-api
+
+on:
+  workflow_dispatch:
+    inputs:
+      scan_type:
+        description: "Tipo de escaneo a ejecutar"
+        required: true
+        default: baseline
+        type: choice
+        options:
+          - baseline
+          - full
+  pull_request:
+    branches: [main]
+    paths:
+      - "docker-compose.yml"
+      - "zap/**"
+      - "app-vulnerable-api/**"
+      - ".github/workflows/dast-vulnerable-api.yml"
+      - ".github/workflows/_dast-reusable.yml"
+  schedule:
+    # Lunes a las 06:00 UTC
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+  security-events: write
+  issues: write
+
+jobs:
+  scan:
+    uses: ./.github/workflows/_dast-reusable.yml
+    with:
+      target_name: vulnerable-api
+      target_service: vulnerable-api
+      target_url: http://localhost:4000
+      scan_type: ${{ github.event.inputs.scan_type || 'baseline' }}

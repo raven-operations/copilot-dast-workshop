@@ -1,0 +1,41 @@
+# DAST contra OWASP Juice Shop.
+# Wrapper que invoca el workflow reutilizable _dast-reusable.yml.
+# Tener un workflow dedicado permite mostrar un badge de estado propio.
+
+name: dast-juice-shop
+
+on:
+  workflow_dispatch:
+    inputs:
+      scan_type:
+        description: "Tipo de escaneo a ejecutar"
+        required: true
+        default: baseline
+        type: choice
+        options:
+          - baseline
+          - full
+  pull_request:
+    branches: [main]
+    paths:
+      - "docker-compose.yml"
+      - "zap/**"
+      - ".github/workflows/dast-juice-shop.yml"
+      - ".github/workflows/_dast-reusable.yml"
+  schedule:
+    # Lunes a las 06:00 UTC
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+  security-events: write
+  issues: write
+
+jobs:
+  scan:
+    uses: ./.github/workflows/_dast-reusable.yml
+    with:
+      target_name: juice-shop
+      target_service: juice-shop
+      target_url: http://localhost:3000
+      scan_type: ${{ github.event.inputs.scan_type || 'baseline' }}

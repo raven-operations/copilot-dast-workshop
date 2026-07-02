@@ -1,7 +1,8 @@
 # GitHub Copilot + OWASP ZAP (DAST) Workshop
 
 [![validate](https://github.com/clever-devops-tools/copilot-dast-workshop/actions/workflows/validate.yml/badge.svg)](https://github.com/clever-devops-tools/copilot-dast-workshop/actions/workflows/validate.yml)
-[![dast](https://github.com/clever-devops-tools/copilot-dast-workshop/actions/workflows/dast.yml/badge.svg)](https://github.com/clever-devops-tools/copilot-dast-workshop/actions/workflows/dast.yml)
+[![dast-juice-shop](https://github.com/clever-devops-tools/copilot-dast-workshop/actions/workflows/dast-juice-shop.yml/badge.svg)](https://github.com/clever-devops-tools/copilot-dast-workshop/actions/workflows/dast-juice-shop.yml)
+[![dast-vulnerable-api](https://github.com/clever-devops-tools/copilot-dast-workshop/actions/workflows/dast-vulnerable-api.yml/badge.svg)](https://github.com/clever-devops-tools/copilot-dast-workshop/actions/workflows/dast-vulnerable-api.yml)
 
 > Laboratorio práctico para aprender a acelerar procesos DevSecOps usando
 > **GitHub Copilot** junto con **Dynamic Application Security Testing (DAST)**.
@@ -222,35 +223,34 @@ Markdown. Las reglas personalizadas viven en [`zap/rules.tsv`](zap/rules.tsv).
 
 ## DAST en GitHub Actions
 
-El repositorio incluye el workflow [`dast`](.github/workflows/dast.yml) que
-ejecuta un escaneo automatizado con OWASP ZAP en la nube.
+El repositorio incluye **un workflow por aplicación** para que cada uno
+tenga su propio badge de estado, más un workflow reutilizable con la
+lógica compartida.
+
+| Workflow                                                                                | Rol                                                    |
+| --------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| [`dast-juice-shop`](.github/workflows/dast-juice-shop.yml)                              | Escanea OWASP Juice Shop.                              |
+| [`dast-vulnerable-api`](.github/workflows/dast-vulnerable-api.yml)                      | Escanea la `vulnerable-api`.                           |
+| [`_dast-reusable`](.github/workflows/_dast-reusable.yml)                                | Lógica compartida (`workflow_call`); no se lanza sola. |
 
 ### Triggers
 
-| Evento                        | Acción                                             |
-| ----------------------------- | -------------------------------------------------- |
-| `workflow_dispatch`           | Ejecución manual (elegir `target` y `scan_type`).  |
-| `pull_request` sobre `main`   | Cambios en `docker-compose.yml`, `zap/**`, `app-vulnerable-api/**` o el workflow. |
-| `schedule` (lunes 06:00 UTC)  | Escaneo semanal automatizado (ambas apps).         |
+Ambos wrappers usan el mismo esquema:
 
-### Estrategia matrix
-
-El workflow usa `strategy.matrix` para escanear las dos apps en paralelo:
-
-| Job                       | Target                              | Artifact                              |
-| ------------------------- | ----------------------------------- | ------------------------------------- |
-| `ZAP juice-shop`          | `http://localhost:3000` (imagen)    | `zap-<baseline\|full>-juice-shop`     |
-| `ZAP vulnerable-api`      | `http://localhost:4000` (build)     | `zap-<baseline\|full>-vulnerable-api` |
+| Evento                        | Acción                                                     |
+| ----------------------------- | ---------------------------------------------------------- |
+| `workflow_dispatch`           | Ejecución manual (elegir `scan_type`: baseline o full).    |
+| `pull_request` sobre `main`   | Cambios en `docker-compose.yml`, `zap/**`, sus paths propios o el reusable. |
+| `schedule` (lunes 06:00 UTC)  | Escaneo semanal automatizado.                              |
 
 ### Ejecución manual
 
 Desde la pestaña **Actions** del repositorio:
 
-1. Selecciona el workflow **dast**.
-2. `Run workflow` → elige:
-   - **target**: `all` (default), `juice-shop` o `vulnerable-api`.
-   - **scan_type**: `baseline` (default) o `full`.
-3. Al finalizar, descarga los reportes desde la sección **Artifacts** del run.
+1. Selecciona **dast-juice-shop** o **dast-vulnerable-api**.
+2. `Run workflow` → elige `scan_type` (`baseline` o `full`).
+3. Al finalizar, descarga los reportes desde la sección **Artifacts** del run
+   (`zap-<scan_type>-<target>`).
 
 ---
 
