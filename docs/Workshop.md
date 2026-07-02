@@ -40,4 +40,4 @@ Al finalizar el workshop, el participante sera capaz de:
 - [x] Etapa 2c: remediacion asistida por GitHub Copilot.
   - Enfoque A (sin código fuente): reverse proxy Caddy vs Juice Shop.
   - Enfoque B (con código fuente): refactor de `vulnerable-api` con Copilot.
-- [ ] Etapa 2d: publicacion de SARIF en la pestana Security (opcional).
+- [~] Etapa 2d: publicacion de SARIF en la pestana Security — **fuera de alcance** del workshop.
