@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./assets/header.png" alt="Copilot DAST Workshop - Cabecera" width="100%" />
+  <img src="./assets/header_esp.png" alt="Copilot DAST Workshop - Cabecera" width="100%" />
 
   # Copilot para Vulnerabilidades de Seguridad DAST con ZAP Proxy
 
