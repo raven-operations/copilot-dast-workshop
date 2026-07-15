@@ -1,7 +1,7 @@
 # Caddyfile - Reverse proxy endurecido delante de OWASP Juice Shop.
 #
-# Este archivo es el resultado del ejercicio "Remediación con Copilot"
-# del workshop (ver docs/Remediation.md). Inyecta los security headers
+# Este archivo es el resultado del ejercicio "Remediación sin acceso al código"
+# del workshop (ver README.md § Paso 4). Inyecta los security headers
 # faltantes que ZAP detectó en el escaneo baseline contra Juice Shop
 # directo.
 

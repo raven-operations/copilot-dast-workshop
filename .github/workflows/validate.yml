@@ -1,4 +1,4 @@
-# Workflow de validacion basico del laboratorio.
+# Workflow de validacion basico del workshop.
 #
 # En esta etapa NO se ejecutan escaneos DAST ni analisis de seguridad.
 # Solo se valida que la estructura del repositorio y el docker-compose
@@ -8,9 +8,9 @@ name: validate-lab
 
 on:
   push:
-    branches: [main]
+    branches: [main, main-copilot-workshop]
   pull_request:
-    branches: [main]
+    branches: [main, main-copilot-workshop]
   workflow_dispatch:
 
 jobs:
@@ -27,12 +27,10 @@ jobs:
           set -euo pipefail
           required=(
             "README.md"
+            "about.md"
             "LICENSE"
             ".gitignore"
             "docker-compose.yml"
-            "docs/Architecture.md"
-            "docs/Workshop.md"
-            "docs/LabGuide.md"
             "scripts/start.sh"
             "scripts/stop.sh"
             "scripts/cleanup.sh"
@@ -46,15 +44,10 @@ jobs:
             ".github/workflows/dast-juice-shop.yml"
             ".github/workflows/dast-vulnerable-api.yml"
             "proxy/Caddyfile"
-            "docs/Remediation.md"
-            "docs/RemediationCode.md"
             "app-vulnerable-api/package.json"
             "app-vulnerable-api/package-lock.json"
             "app-vulnerable-api/Dockerfile"
             "app-vulnerable-api/src/server.js"
-            "docs/Reproducibility.md"
-            "docs/prompts/scenario-a.md"
-            "docs/prompts/scenario-b.md"
           )
           missing=0
           for f in "${required[@]}"; do
@@ -75,8 +68,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # Un laboratorio reproducible no puede depender de tags moviles
-          # (latest, stable, edge). Ver docs/Reproducibility.md.
+          # Un workshop reproducible no puede depender de tags moviles
+          # (latest, stable, edge). Ver about.md § "Politica de reproducibilidad".
           if grep -EHn 'image:\s*\S+:(latest|stable|edge)\b' docker-compose.yml; then
             echo "::error::Se detectaron tags moviles en docker-compose.yml"
             exit 1

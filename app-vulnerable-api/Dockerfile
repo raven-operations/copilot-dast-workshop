@@ -3,7 +3,7 @@
 # de better-sqlite3 en Alpine/musl.
 #
 # La imagen y el lockfile estan pineados para garantizar builds reproducibles.
-# Ver docs/Reproducibility.md para la politica de pinning.
+# Ver about.md § "Política de reproducibilidad".
 
 FROM node:20.20-slim AS base
 

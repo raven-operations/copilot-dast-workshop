@@ -1,4 +1,5 @@
-# Docker Compose para el laboratorio "GitHub Copilot + OWASP ZAP (DAST)".
+# Docker Compose para el workshop
+# "Copilot para Vulnerabilidades de Seguridad DAST con ZAP Proxy".
 #
 # Servicios:
 #   - juice-shop     : app vulnerable de terceros (imagen inmutable).
@@ -15,7 +16,7 @@
 services:
   juice-shop:
     # Pin exacto para que los hallazgos del escaneo sean reproducibles.
-    # Ver docs/Reproducibility.md para la politica de pinning.
+    # Ver about.md § "Política de reproducibilidad".
     image: bkimminich/juice-shop:v20.1.1
     container_name: juice-shop
     restart: unless-stopped

@@ -1,4 +1,4 @@
-# DAST contra la vulnerable-api del laboratorio.
+# DAST contra la vulnerable-api del workshop.
 # Wrapper que invoca el workflow reutilizable _dast-reusable.yml.
 # Tener un workflow dedicado permite mostrar un badge de estado propio.
 
@@ -16,7 +16,7 @@ on:
           - baseline
           - full
   pull_request:
-    branches: [main]
+    branches: [main, main-copilot-workshop]
     paths:
       - "docker-compose.yml"
       - "zap/**"
