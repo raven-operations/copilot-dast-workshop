@@ -192,6 +192,9 @@ docker compose --profile scan run --rm zap `
 
 ### 1.3 Revisar los reportes
 
+> [!NOTE]
+> Los reportes solo existen **después de ejecutar los escaneos** de 1.1 (`vulnerable-api`) y/o 1.2 (`juice-shop`). El nombre incluye el slug del target (ej. `zap-baseline-vulnerable-api_4000.html`, `zap-baseline-juice-shop_3000.html`). Si el archivo que intentás abrir "no existe", volvé al paso anterior y corré el escaneo correspondiente primero.
+
 Los reportes se generan en la carpeta [`reports/`](./reports/) en tres formatos:
 
 | Archivo                                                | Uso sugerido                              |
@@ -200,7 +203,19 @@ Los reportes se generan en la carpeta [`reports/`](./reports/) en tres formatos:
 | `zap-baseline-<target>.json`                           | Ingesta programática (dashboards).        |
 | `zap-baseline-<target>.md`                             | Compartir en PRs y usar con Copilot Chat. |
 
-Abrir el HTML:
+Listar los reportes disponibles en tu carpeta:
+
+```bash
+# macOS / Linux
+ls -1 reports/zap-*.html reports/zap-*.json reports/zap-*.md 2>/dev/null
+```
+
+```powershell
+# Windows (PowerShell)
+Get-ChildItem reports\zap-*.html, reports\zap-*.json, reports\zap-*.md | Select-Object Name
+```
+
+Abrir el HTML de `juice-shop` (reemplazá el nombre por el que quieras revisar):
 
 ```bash
 # macOS / Linux
@@ -210,6 +225,18 @@ open reports/zap-baseline-juice-shop_3000.html
 ```powershell
 # Windows (PowerShell)
 Invoke-Item reports/zap-baseline-juice-shop_3000.html
+```
+
+Abrir el HTML de `vulnerable-api`:
+
+```bash
+# macOS / Linux
+open reports/zap-baseline-vulnerable-api_4000.html
+```
+
+```powershell
+# Windows (PowerShell)
+Invoke-Item reports/zap-baseline-vulnerable-api_4000.html
 ```
 
 ![Reporte ZAP en HTML](./assets/zap-report.png)
