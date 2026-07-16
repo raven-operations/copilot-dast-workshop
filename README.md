@@ -141,19 +141,25 @@ Alternativamente puedes usar los scripts incluidos:
 > [!NOTE]
 > El `baseline` de ZAP es un escaneo **pasivo** (rápido, ~2 min) que solo analiza las respuestas HTTP que encuentra al crawlear. El `full-scan` es **activo**: envía payloads reales de SQLi, XSS, etc. Empezamos con baseline para tener resultados rápidos.
 
+> [!IMPORTANT]
+> **Convención de shells en este workshop:** los bloques etiquetados `bash` usan `\` para continuar línea (macOS / Linux / Git Bash). Los bloques etiquetados `powershell` usan backtick `` ` `` (Windows PowerShell / pwsh). Copiá el bloque que corresponde a tu terminal.
+
 ### 1.1 Escanear `vulnerable-api` (código propio)
 
 ```bash
 # macOS / Linux
 ./scripts/scan.sh baseline http://vulnerable-api:4000
+```
 
+```powershell
 # Windows (PowerShell)
 ./scripts/scan.ps1 baseline http://vulnerable-api:4000
 ```
 
-También podés invocar Docker Compose directamente:
+También podés invocar Docker Compose directamente. Elegí el bloque según tu shell:
 
 ```bash
+# Bash / zsh (macOS / Linux): continuación de línea con `\`
 docker compose --profile scan run --rm zap \
   zap-baseline.py -t http://vulnerable-api:4000 \
   -c /zap/config/rules.tsv \
@@ -162,12 +168,24 @@ docker compose --profile scan run --rm zap \
   -w zap-baseline-vulnerable-api_4000.md -I
 ```
 
+```powershell
+# PowerShell (Windows): continuación de línea con backtick `` ` ``
+docker compose --profile scan run --rm zap `
+  zap-baseline.py -t http://vulnerable-api:4000 `
+  -c /zap/config/rules.tsv `
+  -r zap-baseline-vulnerable-api_4000.html `
+  -J zap-baseline-vulnerable-api_4000.json `
+  -w zap-baseline-vulnerable-api_4000.md -I
+```
+
 ### 1.2 Escanear `juice-shop` (código de terceros)
 
 ```bash
 # macOS / Linux
 ./scripts/scan.sh baseline http://juice-shop:3000
+```
 
+```powershell
 # Windows (PowerShell)
 ./scripts/scan.ps1 baseline http://juice-shop:3000
 ```
@@ -187,8 +205,10 @@ Abrir el HTML:
 ```bash
 # macOS / Linux
 open reports/zap-baseline-juice-shop_3000.html
+```
 
-# Windows (pwsh)
+```powershell
+# Windows (PowerShell)
 Invoke-Item reports/zap-baseline-juice-shop_3000.html
 ```
 
@@ -289,9 +309,11 @@ docker compose up -d vulnerable-api
 #### 1️⃣ Explotar la vulnerabilidad
 
 ```bash
-curl -sG "http://localhost:4000/users/search" \
-     --data-urlencode "name=' OR '1'='1"
+curl -sG "http://localhost:4000/users/search" --data-urlencode "name=' OR '1'='1"
 ```
+
+> [!TIP]
+> En **Windows PowerShell 5.1** el nombre `curl` es alias de `Invoke-WebRequest`. Si al copiar el comando ves un error sobre `--data-urlencode` no reconocido, usá `curl.exe` en lugar de `curl` para invocar el binario real (Windows 10+ lo trae incluido).
 
 Devuelve **todos** los usuarios (incluido `admin`) porque la condición `OR '1'='1'` bypassea el filtro.
 
@@ -330,8 +352,7 @@ curl -sG "http://localhost:4000/users/search" --data-urlencode "name=alice"
 #### 1️⃣ Explotar la vulnerabilidad
 
 ```bash
-curl -sG "http://localhost:4000/greet" \
-     --data-urlencode "name=<script>alert(1)</script>"
+curl -sG "http://localhost:4000/greet" --data-urlencode "name=<script>alert(1)</script>"
 ```
 
 El `<script>` se refleja tal cual dentro del HTML devuelto y se ejecuta en el navegador de la víctima.
@@ -351,8 +372,16 @@ El archivo #file:app-vulnerable-api/src/routes/greet.js sufre Reflected XSS porq
 #### 3️⃣ Verificar el fix
 
 ```bash
+# Bash / zsh
 docker compose up -d --build vulnerable-api
 curl -sG "http://localhost:4000/greet" --data-urlencode "name=<script>alert(1)</script>" | grep -c '<script>'
+# → 0   (el <script> quedó codificado como &lt;script&gt;)
+```
+
+```powershell
+# PowerShell: Select-String reemplaza grep; curl.exe evita el alias hacia Invoke-WebRequest
+docker compose up -d --build vulnerable-api
+(curl.exe -sG "http://localhost:4000/greet" --data-urlencode "name=<script>alert(1)</script>" | Select-String '<script>').Count
 # → 0   (el <script> quedó codificado como &lt;script&gt;)
 ```
 
@@ -407,8 +436,7 @@ curl -sG "http://localhost:4000/ping" --data-urlencode "host=127.0.0.1"
 #### 1️⃣ Explotar la vulnerabilidad
 
 ```bash
-curl -sG "http://localhost:4000/files" \
-     --data-urlencode "name=../../../../etc/passwd"
+curl -sG "http://localhost:4000/files" --data-urlencode "name=../../../../etc/passwd"
 ```
 
 Devuelve el contenido real de `/etc/passwd` del contenedor porque `path.join` **normaliza pero no restringe** los `..`.
@@ -507,7 +535,13 @@ docker compose --profile hardened up -d proxy
 Verificá que responde con los nuevos headers:
 
 ```bash
+# Bash / zsh
 curl -sI http://localhost:8080 | grep -Ei 'content-security-policy|permissions-policy|x-frame-options|strict-transport-security'
+```
+
+```powershell
+# PowerShell: Select-String reemplaza grep; curl.exe evita el alias hacia Invoke-WebRequest
+curl.exe -sI http://localhost:8080 | Select-String -Pattern 'content-security-policy|permissions-policy|x-frame-options|strict-transport-security'
 ```
 
 ![Headers de seguridad tras el proxy](./assets/proxy-headers.png)
@@ -523,8 +557,10 @@ curl -sI http://localhost:8080 | grep -Ei 'content-security-policy|permissions-p
 ```bash
 # macOS / Linux
 ./scripts/scan.sh baseline http://proxy:8080
+```
 
-# Windows (pwsh)
+```powershell
+# Windows (PowerShell)
 ./scripts/scan.ps1 baseline http://proxy:8080
 ```
 
@@ -551,8 +587,10 @@ Compará los dos archivos:
 ```bash
 # macOS / Linux
 ./scripts/scan.sh full http://vulnerable-api:4000
+```
 
-# Windows (pwsh)
+```powershell
+# Windows (PowerShell)
 ./scripts/scan.ps1 full http://vulnerable-api:4000
 ```
 
