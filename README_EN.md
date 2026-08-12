@@ -115,6 +115,15 @@ docker compose up -d
 docker compose ps
 ```
 
+> [!IMPORTANT]
+> **Running the workshop again?** `docker compose up -d` reuses the local `copilot-dast-workshop-vulnerable-api` image if it already exists. Because the `Dockerfile` does `COPY src ./src`, that image preserves the source code **exactly as it was when you built it** — if you already applied the Step 3 fixes in a previous run, the exploits in Step 3.1 will return `{"results":[]}` instead of exposing the vulnerability. To start from the original vulnerable state, force a rebuild:
+>
+> ```bash
+> docker compose up -d --build vulnerable-api
+> ```
+>
+> Or wipe everything with `./scripts/cleanup.sh` / `./scripts/cleanup.ps1` (removes containers, networks, and volumes) and bring the lab back up with `docker compose up -d --build`.
+
 Alternatively, you can use the included scripts:
 
 | Platform         | Start                 | Stop                 | Clean up                |
@@ -321,11 +330,14 @@ The 4 vulnerable endpoints:
 | 3 | `GET /ping`         | Command Injection | A03:2021     | [`src/routes/ping.js`](./app-vulnerable-api/src/routes/ping.js)   |
 | 4 | `GET /files`        | Path Traversal    | A01:2021     | [`src/routes/files.js`](./app-vulnerable-api/src/routes/files.js) |
 
-Make sure the app is up:
+Make sure the app is up **with the current vulnerable source from disk**. Use `--build` to force Docker to rebuild the image and avoid reusing a cached image from a previous run (which might already contain the fixes):
 
 ```bash
-docker compose up -d vulnerable-api
+docker compose up -d --build vulnerable-api
 ```
+
+> [!TIP]
+> If the exploit `curl` commands return `{"results":[]}` or another "clean" output on the very first try, you're almost certainly hitting an image that already has the fixes baked in. Run the `--build` command above and try again.
 
 ---
 
